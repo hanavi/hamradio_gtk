@@ -59,6 +59,7 @@ void reset(gpointer data)
     gtk_entry_set_text(GTK_ENTRY(objects->entry_rst_recv), "");
 
     // gtk_entry_set_text(GTK_ENTRY(objects->entry_notes), "");
+
 }
 
 void on_button_reset_clicked(GtkWidget *widget, gpointer data)
@@ -66,10 +67,11 @@ void on_button_reset_clicked(GtkWidget *widget, gpointer data)
     reset(data);
 }
 
-void on_menu_open_click(gpointer data)
+void on_menu_open_click(GtkWidget *widget, gpointer data)
 {
 
     ObjectList *objects = (ObjectList *)data;
+
     GtkWidget *dialog;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
     gint res;
@@ -94,7 +96,7 @@ void on_menu_open_click(gpointer data)
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
         filename = gtk_file_chooser_get_filename (chooser);
-        printf("%s\n", filename);
+        //printf("%s\n", filename);
 
         rc = sqlite3_open(filename, &db);
 
@@ -112,7 +114,7 @@ void on_menu_open_click(gpointer data)
     objects->db = db;
 }
 
-void on_menu_new_click(gpointer data)
+void on_menu_new_click(GtkWidget *widget, gpointer data)
 {
     ObjectList *objects = (ObjectList *)data;
     GtkWidget *dialog;
@@ -139,7 +141,7 @@ void on_menu_new_click(gpointer data)
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
         filename = gtk_file_chooser_get_filename (chooser);
-        printf("%s\n", filename);
+        //printf("%s\n", filename);
 
         rc = sqlite3_open(filename, &db);
 
@@ -155,7 +157,7 @@ void on_menu_new_click(gpointer data)
 
     gtk_widget_destroy (dialog);
 
-    sql = "create table logs ( logid int auto_increment primary key," \
+    sql = "create table logs ( logid integer primary key autoincrement," \
                              " local_callsign varchar(20)," \
                              " entry_date varchar(20)," \
                              " start_time varchar(20)," \
@@ -299,30 +301,21 @@ void on_button_save_clicked(GtkWidget *widget, gpointer data)
     // printf("entry_rst_sent %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_sent)));
     // printf("entry_rst_recv %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_recv)));
 
-    //sqlite3 *db;
+    sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
-    char *sql;
-    sqlite3 * db;
+    char sql[1024];
+
 
     db = objects->db;
 
-    if( rc )
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(objects->db));
-    }
-    else
-    {
-        fprintf(stderr, "Opened database successfully\n");
-    }
 
     /* Create SQL statement */
-
     sprintf(sql, "insert into logs ( local_callsign, entry_date, start_time, " \
                             " end_time, frequency, mode, remote_callsign, " \
                             " power, rst_sent, rst_recv)" \
                             " values " \
-                            "( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )",
+                            "( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' );",
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_my_callsign)),
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_date)),
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_start_time)),
@@ -334,7 +327,9 @@ void on_button_save_clicked(GtkWidget *widget, gpointer data)
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_sent)),
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_recv)));
 
-    printf("%s\n", sql);
+    //sprintf(sql, "insert into logs ( local_callsign ) values ( 'ai4lx2' );");
+
+    //printf("%s\n", sql);
 
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -342,12 +337,9 @@ void on_button_save_clicked(GtkWidget *widget, gpointer data)
     printf("%d\n", rc);
     if( rc != SQLITE_OK )
     {
-        printf("some kinda error...");
-        //fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        //sqlite3_free(zErrMsg);
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
     }
-
-    printf("no kinda error...");
 
     reset(data);
 
@@ -407,6 +399,8 @@ int main(int argc, char *argv[])
     object_list->button_save = gtk_builder_get_object(builder, "button_save");
     object_list->button_reset = gtk_builder_get_object(builder, "button_reset");
 
+    object_list->db = NULL;
+
     g_signal_connect (object_list->menu_new, "activate", G_CALLBACK (on_menu_new_click), object_list);
     g_signal_connect (object_list->menu_open, "activate", G_CALLBACK (on_menu_open_click), object_list);
     g_signal_connect (object_list->menu_quit, "activate", G_CALLBACK (on_menu_item_quit_activate), object_list);
@@ -420,7 +414,7 @@ int main(int argc, char *argv[])
     g_signal_connect (object_list->button_save, "clicked", G_CALLBACK (on_button_save_clicked), object_list);
     g_signal_connect (object_list->button_reset, "clicked", G_CALLBACK (on_button_reset_clicked), object_list);
 
-    load_config(object_list);
+    // load_config(object_list);
 
     gtk_widget_show(GTK_WIDGET(object_list->window));
 
