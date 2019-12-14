@@ -7,12 +7,15 @@
 
 typedef struct {
 
+    // Main
     GObject *window;
 
+    // Menu items
     GObject *menu_quit;
     GObject *menu_new;
     GObject *menu_open;
 
+    // Text Entry
     GObject *entry_my_callsign;
     GObject *entry_date;
     GObject *entry_start_time;
@@ -25,6 +28,7 @@ typedef struct {
     GObject *entry_rst_recv;
     GObject *entry_notes;
 
+    // Buttons
     GObject *button_today;
     GObject *button_start_time;
     GObject *button_end_time;
@@ -34,10 +38,12 @@ typedef struct {
     GObject *button_save;
     GObject *button_reset;
 
+    // Other stuff
     sqlite3 *db;
 
 } ObjectList;
 
+/* This function is needed by sqlite3 */
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
     int i;
     for(i = 0; i<argc; i++)
@@ -48,8 +54,10 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
     return 0;
 }
 
-void reset(gpointer data)
+/* Clear out old data on main entry screen */
+void reset_main(gpointer data)
 {
+
     ObjectList *objects = (ObjectList *)data;
 
     gtk_entry_set_text(GTK_ENTRY(objects->entry_start_time), "");
@@ -58,20 +66,22 @@ void reset(gpointer data)
     gtk_entry_set_text(GTK_ENTRY(objects->entry_rst_sent), "");
     gtk_entry_set_text(GTK_ENTRY(objects->entry_rst_recv), "");
 
+    // TODO: The textview works differently and needs a little more work
     // gtk_entry_set_text(GTK_ENTRY(objects->entry_notes), "");
 
 }
 
+/* Deal with the reset button */
 void on_button_reset_clicked(GtkWidget *widget, gpointer data)
 {
-    reset(data);
+    reset_main(data);
 }
 
+/* Open a new database to save the logs */
 void on_menu_open_click(GtkWidget *widget, gpointer data)
 {
 
     ObjectList *objects = (ObjectList *)data;
-
     GtkWidget *dialog;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
     gint res;
@@ -91,6 +101,7 @@ void on_menu_open_click(GtkWidget *widget, gpointer data)
                                           NULL);
 
     res = gtk_dialog_run (GTK_DIALOG (dialog));
+
     if (res == GTK_RESPONSE_ACCEPT)
     {
         char *filename;
@@ -114,6 +125,7 @@ void on_menu_open_click(GtkWidget *widget, gpointer data)
     objects->db = db;
 }
 
+/* Deal with the new menu item */
 void on_menu_new_click(GtkWidget *widget, gpointer data)
 {
     ObjectList *objects = (ObjectList *)data;
@@ -141,7 +153,6 @@ void on_menu_new_click(GtkWidget *widget, gpointer data)
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
         filename = gtk_file_chooser_get_filename (chooser);
-        //printf("%s\n", filename);
 
         rc = sqlite3_open(filename, &db);
 
@@ -157,6 +168,7 @@ void on_menu_new_click(GtkWidget *widget, gpointer data)
 
     gtk_widget_destroy (dialog);
 
+    // Build the sql query for a new table
     sql = "create table logs ( logid integer primary key autoincrement," \
                              " local_callsign varchar(20)," \
                              " entry_date varchar(20)," \
@@ -169,6 +181,7 @@ void on_menu_new_click(GtkWidget *widget, gpointer data)
                              " rst_sent varchar(20), " \
                              " rst_recv varchar(20))";
 
+    // Execute and error checking
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     if( rc != SQLITE_OK ){
@@ -184,14 +197,12 @@ void on_menu_new_click(GtkWidget *widget, gpointer data)
     objects->db = db;
 }
 
-void initialize_databse(char* filename, gpointer data)
-{
-    ObjectList *objects = (ObjectList *)data;
-    printf("%s\n", filename);
-}
 
+/* Load the config from a file */
 void load_config(gpointer data)
 {
+    // TODO: find a config parser
+
     ObjectList *objects = (ObjectList *)data;
     FILE *fd;
     char *line = NULL;
@@ -215,6 +226,7 @@ void load_config(gpointer data)
 
 }
 
+/* Open the QRZ page for the callsign */
 void on_button_qrz_clicked(GtkWidget *widget, gpointer data)
 {
     ObjectList *objects = (ObjectList *)data;
@@ -226,18 +238,21 @@ void on_button_qrz_clicked(GtkWidget *widget, gpointer data)
     system(cmd);
 }
 
+/* Set the RST Sent value to 59 */
 void on_button_59_sent_clicked(GtkWidget *widget, gpointer data)
 {
     ObjectList *objects = (ObjectList *)data;
     gtk_entry_set_text(GTK_ENTRY(objects->entry_rst_sent), (const gchar *)"59");
 }
 
+/* Set the RST Recv value to 59 */
 void on_button_59_recv_clicked(GtkWidget *widget, gpointer data)
 {
     ObjectList *objects = (ObjectList *)data;
     gtk_entry_set_text(GTK_ENTRY(objects->entry_rst_recv), (const gchar *)"59");
 }
 
+/* Set the start time entry to now */
 void on_button_start_time_clicked(GtkWidget *widget, gpointer data)
 {
 
@@ -254,6 +269,7 @@ void on_button_start_time_clicked(GtkWidget *widget, gpointer data)
 
 }
 
+/* Set the end time entry to now */
 void on_button_end_time_clicked(GtkWidget *widget, gpointer data)
 {
 
@@ -270,6 +286,7 @@ void on_button_end_time_clicked(GtkWidget *widget, gpointer data)
 
 }
 
+/* Set the date box to today */
 void on_button_today_clicked(GtkWidget *widget, gpointer data)
 {
 
@@ -286,31 +303,20 @@ void on_button_today_clicked(GtkWidget *widget, gpointer data)
 
 }
 
+/* Save the entry */
 void on_button_save_clicked(GtkWidget *widget, gpointer data)
 {
 
     ObjectList *objects = (ObjectList *)data;
-
-    // printf("entry_date %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_date)));
-    // printf("entry_start_time %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_start_time)));
-    // printf("entry_end_time %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_end_time)));
-    // printf("entry_frequency %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_frequency)));
-    // printf("entry_mode %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_mode)));
-    // printf("entry_remote_callsign %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_remote_callsign)));
-    // printf("entry_power %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_power)));
-    // printf("entry_rst_sent %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_sent)));
-    // printf("entry_rst_recv %s\n", (char *)gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_recv)));
 
     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
     char sql[1024];
 
-
     db = objects->db;
 
-
-    /* Create SQL statement */
+    // Create SQL statement
     sprintf(sql, "insert into logs ( local_callsign, entry_date, start_time, " \
                             " end_time, frequency, mode, remote_callsign, " \
                             " power, rst_sent, rst_recv)" \
@@ -327,24 +333,21 @@ void on_button_save_clicked(GtkWidget *widget, gpointer data)
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_sent)),
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_rst_recv)));
 
-    //sprintf(sql, "insert into logs ( local_callsign ) values ( 'ai4lx2' );");
 
-    //printf("%s\n", sql);
-
-    /* Execute SQL statement */
+    // Execute SQL statement
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
-    printf("%d\n", rc);
     if( rc != SQLITE_OK )
     {
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     }
 
-    reset(data);
+    reset_main(data);
 
 }
 
+/* Quit the application */
 void on_menu_item_quit_activate(GtkWidget *widget, gpointer data)
 {
     gtk_main_quit();
@@ -372,12 +375,19 @@ int main(int argc, char *argv[])
     object_list->window = gtk_builder_get_object(builder, "window");
     g_signal_connect (object_list->window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
-    /* gtk_builder_connect_signals(builder, NULL); */
+    // gtk_builder_connect_signals(builder, NULL);
 
+    // Set up the menu items
     object_list->menu_quit = gtk_builder_get_object(builder, "menu_item_quit");
     object_list->menu_new = gtk_builder_get_object(builder, "menu_item_new");
     object_list->menu_open = gtk_builder_get_object(builder, "menu_item_open");
 
+    // Connect the menu signals
+    g_signal_connect (object_list->menu_new, "activate", G_CALLBACK (on_menu_new_click), object_list);
+    g_signal_connect (object_list->menu_open, "activate", G_CALLBACK (on_menu_open_click), object_list);
+    g_signal_connect (object_list->menu_quit, "activate", G_CALLBACK (on_menu_item_quit_activate), object_list);
+
+    // Set up the entry boxes
     object_list->entry_my_callsign = gtk_builder_get_object(builder, "entry_my_callsign");
     object_list->entry_date = gtk_builder_get_object(builder, "entry_date");
     object_list->entry_start_time = gtk_builder_get_object(builder, "entry_start_time");
@@ -390,6 +400,7 @@ int main(int argc, char *argv[])
     object_list->entry_rst_recv = gtk_builder_get_object(builder, "entry_rst_recv");
     object_list->entry_notes = gtk_builder_get_object(builder, "entry_notes");
 
+    // Set up the buttons
     object_list->button_today = gtk_builder_get_object(builder, "button_today");
     object_list->button_start_time = gtk_builder_get_object(builder, "button_start_time");
     object_list->button_end_time = gtk_builder_get_object(builder, "button_end_time");
@@ -399,12 +410,7 @@ int main(int argc, char *argv[])
     object_list->button_save = gtk_builder_get_object(builder, "button_save");
     object_list->button_reset = gtk_builder_get_object(builder, "button_reset");
 
-    object_list->db = NULL;
-
-    g_signal_connect (object_list->menu_new, "activate", G_CALLBACK (on_menu_new_click), object_list);
-    g_signal_connect (object_list->menu_open, "activate", G_CALLBACK (on_menu_open_click), object_list);
-    g_signal_connect (object_list->menu_quit, "activate", G_CALLBACK (on_menu_item_quit_activate), object_list);
-
+    // Set up the button signals
     g_signal_connect (object_list->button_today, "clicked", G_CALLBACK (on_button_today_clicked), object_list);
     g_signal_connect (object_list->button_start_time, "clicked", G_CALLBACK (on_button_start_time_clicked), object_list);
     g_signal_connect (object_list->button_end_time, "clicked", G_CALLBACK (on_button_end_time_clicked), object_list);
@@ -414,6 +420,10 @@ int main(int argc, char *argv[])
     g_signal_connect (object_list->button_save, "clicked", G_CALLBACK (on_button_save_clicked), object_list);
     g_signal_connect (object_list->button_reset, "clicked", G_CALLBACK (on_button_reset_clicked), object_list);
 
+    // Set up everything else
+    object_list->db = NULL;
+
+    // WIP
     // load_config(object_list);
 
     gtk_widget_show(GTK_WIDGET(object_list->window));
