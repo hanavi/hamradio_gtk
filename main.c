@@ -429,6 +429,10 @@ int main(int argc, char *argv[])
     gtk_widget_show(GTK_WIDGET(object_list->window));
 
     gtk_main();
-
+    
+    // Free some memory
+    free(object_list->db);
+    free(object_list);
+    
     return 0;
 }
