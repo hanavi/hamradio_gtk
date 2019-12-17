@@ -9,6 +9,7 @@ be more customized to do exactly what I want.
 
 ## TODO:
 
+* Add input sanitizing/checks
 * Switch from localtime to UTC
 * Set a default database
 * Clean up database when switching to new database
@@ -20,5 +21,6 @@ be more customized to do exactly what I want.
 * Start work on Help documents and About page
 * Set up exports for various output/contest formats
 * Add contest options(?)
+* Add licensing stuff (GPL,MIT,...?)
 * Probably lots of other stuff....
 * Actually get back on the radio and use this...
