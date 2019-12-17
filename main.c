@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
     gtk_main();
     
     // Free some memory
-    free(object_list->db);
+    sqlite3_db_release_memory(object_list->db);
     free(object_list);
     
     return 0;
