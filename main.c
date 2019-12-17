@@ -169,16 +169,16 @@ void on_menu_new_click(GtkWidget *widget, gpointer data)
     gtk_widget_destroy (dialog);
 
     // Build the sql query for a new table
-    sql = "create table logs ( logid integer primary key autoincrement," \
-                             " local_callsign varchar(20)," \
-                             " entry_date varchar(20)," \
-                             " start_time varchar(20)," \
-                             " end_time varchar(20), " \
-                             " frequency varchar(20), " \
-                             " mode varchar(20), " \
-                             " remote_callsign varchar(20), " \
-                             " power varchar(20), " \
-                             " rst_sent varchar(20), " \
+    sql = "create table logs ( logid integer primary key autoincrement," 
+                             " local_callsign varchar(20)," 
+                             " entry_date varchar(20)," 
+                             " start_time varchar(20)," 
+                             " end_time varchar(20), " 
+                             " frequency varchar(20), " 
+                             " mode varchar(20), " 
+                             " remote_callsign varchar(20), " 
+                             " power varchar(20), " 
+                             " rst_sent varchar(20), " 
                              " rst_recv varchar(20))";
 
     // Execute and error checking
@@ -317,10 +317,10 @@ void on_button_save_clicked(GtkWidget *widget, gpointer data)
     db = objects->db;
 
     // Create SQL statement
-    sprintf(sql, "insert into logs ( local_callsign, entry_date, start_time, " \
-                            " end_time, frequency, mode, remote_callsign, " \
-                            " power, rst_sent, rst_recv)" \
-                            " values " \
+    sprintf(sql, "insert into logs ( local_callsign, entry_date, start_time, " 
+                            " end_time, frequency, mode, remote_callsign, " 
+                            " power, rst_sent, rst_recv)" 
+                            " values " 
                             "( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' );",
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_my_callsign)),
                              gtk_entry_get_text(GTK_ENTRY(objects->entry_date)),
