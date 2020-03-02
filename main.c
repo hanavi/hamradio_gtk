@@ -262,7 +262,7 @@ void on_button_start_time_clicked(GtkWidget *widget, gpointer data)
     struct tm *lt;
 
     time(&rawtime);
-    lt = localtime(&rawtime);
+    lt = gmtime(&rawtime);
     strftime(buff, 80, "%H:%M:%S", lt);
 
     gtk_entry_set_text(GTK_ENTRY(objects->entry_start_time), buff);
@@ -279,7 +279,7 @@ void on_button_end_time_clicked(GtkWidget *widget, gpointer data)
     struct tm *lt;
 
     time(&rawtime);
-    lt = localtime(&rawtime);
+    lt = gmtime(&rawtime);
     strftime(buff, 80, "%H:%M:%S", lt);
 
     gtk_entry_set_text(GTK_ENTRY(objects->entry_end_time), buff);
@@ -296,7 +296,7 @@ void on_button_today_clicked(GtkWidget *widget, gpointer data)
     struct tm *lt;
 
     time(&rawtime);
-    lt = localtime(&rawtime);
+    lt = gmtime(&rawtime);
     strftime(buff, 80, "%Y-%m-%d", lt);
 
     gtk_entry_set_text(GTK_ENTRY(objects->entry_date), buff);
